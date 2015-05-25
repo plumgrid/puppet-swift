@@ -1,6 +1,8 @@
 swift
 =======
 
+5.0.0 - 2014.2.0 - Juno
+
 #### Table of Contents
 
 1. [Overview - What is the swift module?](#overview)
@@ -21,7 +23,7 @@ The swift module is a part of [Stackforge](https://github.com/stackforge), an ef
 Module Description
 ------------------
 
-The swift module is a thorough attempt to make Puppet capable of managing the entirety of swift.  This includes manifests to provision such things as keystone, stroage backends, proxies, and the ring.  Types are shipped as part of the swift module to assist in manipulation of configuration files.  The classes in this module will deploy Swift using best practices for a typical deployment.
+The swift module is a thorough attempt to make Puppet capable of managing the entirety of swift.  This includes manifests to provision such things as keystone, storage backends, proxies, and the ring.  Types are shipped as part of the swift module to assist in manipulation of configuration files.  The classes in this module will deploy Swift using best practices for a typical deployment.
 
 This module is tested in combination with other modules needed to build and leverage an entire Openstack software stack.  These modules can be found, all pulled together in the [openstack module](https://github.com/stackforge/puppet-openstack).  In addition, this module requires Puppet's [exported resources](http://docs.puppetlabs.com/puppet/3/reference/lang_exported.html).
 
@@ -58,6 +60,7 @@ class { 'swift::storage::all':
 }
 
 @@ring_object_device { "${ipaddress_eth0}:6000/1":
+  region => 1, # optional, defaults to 1
   zone   => 1,
   weight => 1,
 }
@@ -71,14 +74,17 @@ class { 'swift::storage::all':
 }
 
 @@ring_object_device { "${ipaddress_eth0}:6000/2":
+  region => 2,
   zone   => 1,
   weight => 1,
 }
 @@ring_container_device { "${ipaddress_eth0}:6001/2":
+  region => 2,
   zone   => 1,
   weight => 1,
 }
 @@ring_account_device { "${ipaddress_eth0}:6002/2":
+  region => 2,
   zone   => 1,
   weight => 1,
 }
@@ -229,6 +235,18 @@ Limitations
 
 * No explicit support external NAS devices (i.e. Nexenta and LFS) to offload the ring replication requirements.
 
+Beaker-Rspec
+------------
+
+This module has beaker-rspec tests
+
+To run:
+
+``shell
+bundle install
+bundle exec rspec spec/acceptance
+``
+
 Development
 -----------
 
@@ -243,6 +261,50 @@ Contributors
 
 Release Notes
 -------------
+
+**5.0.0**
+
+* Stable Juno release
+* Updated s3token.conf template for Juno
+* Added parameter log_name to swift::proxy and swift::storage::server
+* Bumped stdlib dependency to >=4.0.0
+
+**4.1.0**
+
+* Added swift-ring-builder multi-region support.
+* Added swift::proxy::crossdomain class.
+* Added support for RHEL 7.
+* Fixed Swift quota filter names.
+* Fixed config dependency bugs.
+* Fixed resource conflict when ringserver and storage are on same node.
+* Fixed selinux bugs.
+* Pinned major gems.
+
+**4.0.0**
+
+* Stable Icehouse release.
+* Added support for parameterizing endpoint prefix.
+* Added read_affinity, write_affinity support to proxy.
+* Added proxyserver gatekeeper middleware.
+* Added swift::proxy::slo class.
+* Added support for allow_versions in Swift containers.
+* Add support for middlewares with hyphens in name.
+* Fixed spurious warning in pipeline check.
+* Fixed test files.
+* Fixed deprecation warnings in inline templates.
+* Updated swift::keystone::auth spec tests.
+
+**3.0.0**
+
+* Major release for OpenStack Havana.
+* Fixed Puppet 3.x template variable deprecation warning.
+* Added swift operator roles to Keystone.
+* Defaults include_service_catalog to false for improved performance.
+* Fixed auth_token configuration.
+* Fixed filter name for puppetdb.
+* Added bulk middleware support.
+* Added quota middleware support.
+* Allow configuration of admin and internal protocols for keystone endpoint.
 
 **2.2.0**
 

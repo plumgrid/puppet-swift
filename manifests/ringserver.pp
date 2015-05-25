@@ -1,6 +1,15 @@
+# == Class: swift::ringserver
+#
 # Used to create an rsync server to serve up the ring databases via rsync
 #
-# == Parameters
+# === Parameters
+#
+# [*local_net_ip*]
+#   (required) ip address that the swift servers should bind to.
+#
+# [*max_connections*]
+#   (optional) maximum connections to rsync server
+#   Defaults to 5
 #
 # == Dependencies
 #
@@ -21,12 +30,14 @@ class swift::ringserver(
   $max_connections = 5
 ) {
 
-  Class['ringbuilder'] -> Class['swift::ringserver']
+  Class['swift::ringbuilder'] -> Class['swift::ringserver']
 
-  class { 'rsync::server':
-    use_xinetd => true,
-    address    => $local_net_ip,
-    use_chroot => 'no',
+  if !defined(Class['rsync::server']) {
+    class { '::rsync::server':
+      use_xinetd => true,
+      address    => $local_net_ip,
+      use_chroot => 'no',
+    }
   }
 
   rsync::server::module { 'swift_server':

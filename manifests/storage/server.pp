@@ -1,14 +1,39 @@
+# == Define: swift::storage::server
 #
-# I am not sure if this is the right name
-#   - should it be device?
+# Configures an account, container or object server
 #
-#  name - is going to be port
+# === Parameters:
+#
+# [*title*] The port the server will be exposed to
+#   Mandatory. Usually 6000, 6001 and 6002 for respectively
+#   object, container and account.
+#
+# [*incoming_chmod*] Incoming chmod to set in the rsync server.
+#   Optional. Defaults to 0644 for maintaining backwards compatibility.
+#   *NOTE*: Recommended parameter: 'Du=rwx,g=rx,o=rx,Fu=rw,g=r,o=r'
+#    This mask translates to 0755 for directories and 0644 for files.
+#
+# [*outgoing_chmod*] Outgoing chmod to set in the rsync server.
+#   Optional. Defaults to 0644 for maintaining backwards compatibility.
+#   *NOTE*: Recommended parameter: 'Du=rwx,g=rx,o=rx,Fu=rw,g=r,o=r'
+#    This mask translates to 0755 for directories and 0644 for files.
+#
+#  [*log_udp_host*]
+#    (optional) If not set, the UDP receiver for syslog is disabled.
+#    Defaults to undef.
+#
+#  [*log_udp_port*]
+#    (optional) Port value for UDP receiver, if enabled.
+#    Defaults to undef.
+#
 define swift::storage::server(
   $type,
   $storage_local_net_ip,
   $devices                = '/srv/node',
   $owner                  = 'swift',
   $group                  = 'swift',
+  $incoming_chmod         = '0644',
+  $outgoing_chmod         = '0644',
   $max_connections        = 25,
   $pipeline               = ["${type}-server"],
   $mount_check            = false,
@@ -21,20 +46,36 @@ define swift::storage::server(
   $log_facility           = 'LOG_LOCAL2',
   $log_level              = 'INFO',
   $log_address            = '/dev/log',
+  $log_name               = "${type}-server",
+  $log_udp_host           = undef,
+  $log_udp_port           = undef,
   # this parameters needs to be specified after type and name
   $config_file_path       = "${type}-server/${name}.conf"
 ) {
 
-  # TODO if array does not include type-server, warn
-  if(
-    (is_array($pipeline) and ! member($pipeline, "${type}-server")) or
-    $pipeline != "${type}-server"
-  ) {
-      warning("swift storage server ${type} must specify ${type}-server")
+  if ($incoming_chmod == '0644') {
+    warning('The default incoming_chmod set to 0644 may yield in error prone directories and will be changed in a later release.')
   }
 
-  include "swift::storage::${type}"
-  include concat::setup
+  if ($outgoing_chmod == '0644') {
+    warning('The default outgoing_chmod set to 0644 may yield in error prone directories and will be changed in a later release.')
+  }
+
+  # Warn if ${type-server} isn't included in the pipeline
+  if is_array($pipeline) {
+    if !member($pipeline, "${type}-server") {
+      warning("swift storage server ${type} must specify ${type}-server")
+    }
+  } elsif $pipeline != "${type}-server" {
+    warning("swift storage server ${type} must specify ${type}-server")
+  }
+
+  if ($log_udp_port and !$log_udp_host) {
+    fail ('log_udp_port requires log_udp_host to be set')
+  }
+
+  include "::swift::storage::${type}"
+  include ::concat::setup
 
   validate_re($name, '^\d+$')
   validate_re($type, '^object|container|account$')
@@ -49,6 +90,8 @@ define swift::storage::server(
     lock_file       => "/var/lock/${type}.lock",
     uid             => $owner,
     gid             => $group,
+    incoming_chmod  => $incoming_chmod,
+    outgoing_chmod  => $outgoing_chmod,
     max_connections => $max_connections,
     read_only       => false,
   }
@@ -57,13 +100,14 @@ define swift::storage::server(
     owner   => $owner,
     group   => $group,
     notify  => Service["swift-${type}", "swift-${type}-replicator"],
-    mode    => 640,
+    require => Package['swift'],
+    mode    => '0640',
   }
 
   $required_middlewares = split(
     inline_template(
       "<%=
-        (pipeline - ['${type}-server']).collect do |x|
+        (@pipeline - ['${type}-server']).collect do |x|
           'Swift::Storage::Filter::' + x.capitalize + '[${type}]'
         end.join(',')
       %>"), ',')
@@ -78,5 +122,6 @@ define swift::storage::server(
     # does not specify the backends for every specified element of
     # the pipeline
     before  => $required_middlewares,
+    require => Package['swift'],
   }
 }
