@@ -1,7 +1,7 @@
 swift
 =======
 
-5.0.0 - 2014.2.0 - Juno
+6.0.0 - 2015.1 - Kilo
 
 #### Table of Contents
 
@@ -13,12 +13,11 @@ swift
 6. [Limitations - OS compatibility, etc.](#limitations)
 7. [Development - Guide for contributing to the module](#development)
 8. [Contributors - Those with commits](#contributors)
-9. [Release Notes - Notes on the most recent updates to the module](#release-notes)
 
 Overview
 --------
 
-The swift module is a part of [Stackforge](https://github.com/stackforge), an effort by the Openstack infrastructure team to provide continuous integration testing and code review for Openstack and Openstack community projects not part of the core software.  The module itself is used to flexibly configure and manage the object storage service for Openstack.
+The swift module is a part of [OpenStack](https://github.com/openstack), an effort by the Openstack infrastructure team to provide continuous integration testing and code review for Openstack and Openstack community projects as part of the core software.  The module itself is used to flexibly configure and manage the object storage service for Openstack.
 
 Module Description
 ------------------
@@ -257,73 +256,4 @@ Developer documentation for the entire puppet-openstack project.
 Contributors
 ------------
 
-* https://github.com/stackforge/puppet-swift/graphs/contributors
-
-Release Notes
--------------
-
-**5.0.0**
-
-* Stable Juno release
-* Updated s3token.conf template for Juno
-* Added parameter log_name to swift::proxy and swift::storage::server
-* Bumped stdlib dependency to >=4.0.0
-
-**4.1.0**
-
-* Added swift-ring-builder multi-region support.
-* Added swift::proxy::crossdomain class.
-* Added support for RHEL 7.
-* Fixed Swift quota filter names.
-* Fixed config dependency bugs.
-* Fixed resource conflict when ringserver and storage are on same node.
-* Fixed selinux bugs.
-* Pinned major gems.
-
-**4.0.0**
-
-* Stable Icehouse release.
-* Added support for parameterizing endpoint prefix.
-* Added read_affinity, write_affinity support to proxy.
-* Added proxyserver gatekeeper middleware.
-* Added swift::proxy::slo class.
-* Added support for allow_versions in Swift containers.
-* Add support for middlewares with hyphens in name.
-* Fixed spurious warning in pipeline check.
-* Fixed test files.
-* Fixed deprecation warnings in inline templates.
-* Updated swift::keystone::auth spec tests.
-
-**3.0.0**
-
-* Major release for OpenStack Havana.
-* Fixed Puppet 3.x template variable deprecation warning.
-* Added swift operator roles to Keystone.
-* Defaults include_service_catalog to false for improved performance.
-* Fixed auth_token configuration.
-* Fixed filter name for puppetdb.
-* Added bulk middleware support.
-* Added quota middleware support.
-* Allow configuration of admin and internal protocols for keystone endpoint.
-
-**2.2.0**
-
-* Improved proxy directory signing support.
-* Various lint, and deprecation fixes.
-
-**2.1.0**
-
-* Management of swift-bench
-* allow_versions flag for object versioning
-* ini_setting based custom types for configs
-* Configurable log for proxy-server
-* Adds signing directory
-* Puppet lint and warning fixes
-
-**2.0.0**
-
-* Upstream is now part of stackforge.
-* swift_ring_builder supports replicator.
-* Supports swift 1.8
-* Further Red Hat support.
-* Various cleanups and bug fixes.
+* https://github.com/openstack/puppet-swift/graphs/contributors
