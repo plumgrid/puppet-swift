@@ -47,14 +47,12 @@ define swift::storage::generic(
     # this is a way to dynamically build the variables to lookup
     # sorry its so ugly :(
     name   => inline_template("<%= scope.lookupvar('::swift::params::${name}_package_name') %>"),
-    tag    => 'openstack',
+    tag    => ['openstack', 'swift-package'],
     before => Service["swift-${name}", "swift-${name}-replicator"],
   }
 
   file { "/etc/swift/${name}-server/":
     ensure => directory,
-    owner  => 'swift',
-    group  => 'swift',
   }
 
   if $manage_service {
@@ -72,6 +70,7 @@ define swift::storage::generic(
     hasstatus => true,
     provider  => $service_provider,
     subscribe => Package["swift-${name}"],
+    tag       => 'swift-service',
   }
 
   service { "swift-${name}-replicator":
@@ -81,6 +80,7 @@ define swift::storage::generic(
     hasstatus => true,
     provider  => $service_provider,
     subscribe => Package["swift-${name}"],
+    tag       => 'swift-service',
   }
 
 }

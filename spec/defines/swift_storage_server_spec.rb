@@ -21,7 +21,8 @@ describe 'swift::storage::server' do
       :group           => 'swift',
       :incoming_chmod  => '0644',
       :outgoing_chmod  => '0644',
-      :max_connections => '25'
+      :max_connections => '25',
+      :log_requests    => true
     }
   end
 
@@ -131,6 +132,23 @@ describe 'swift::storage::server' do
             it { is_expected.to contain_file(fragment_file).with_content(/^log_udp_port\s*=\s*514\s*$/) }
           end
         end
+
+        describe "when using swift_#{t}_config resource" do
+          let :pre_condition do
+            "
+            class { 'swift': swift_hash_suffix => 'foo' }
+            class { 'swift::storage': storage_local_net_ip => '10.0.0.1' }
+            swift_#{t}_config { 'foo/bar': value => 'foo' }
+            "
+          end
+          it { is_expected.to contain_concat("/etc/swift/#{t}-server/#{title}.conf").that_comes_before("Swift_#{t}_config[foo/bar]") }
+        end
+        describe "when log_requests is turned off" do
+          let :params do req_params.merge({:log_requests => false}) end
+          it { is_expected.to contain_file(fragment_file) \
+            .with_content(/^set log_requests\s*=\s*false\s*$/)
+          }
+        end
       end
 
       describe 'with all allowed defaults' do
@@ -159,6 +177,7 @@ describe 'swift::storage::server' do
         it { is_expected.to contain_file(fragment_file).with_content(/^set log_facility\s*=\s*LOG_LOCAL2\s*$/) }
         it { is_expected.to contain_file(fragment_file).with_content(/^set log_level\s*=\s*INFO\s*$/) }
         it { is_expected.to contain_file(fragment_file).with_content(/^set log_address\s*=\s*\/dev\/log\s*$/) }
+        it { is_expected.to contain_file(fragment_file).with_content(/^set log_requests\s*=\s*true\s*$/) }
         it { is_expected.to contain_file(fragment_file).with_content(/^workers\s*=\s*1\s*$/) }
         it { is_expected.to contain_file(fragment_file).with_content(/^concurrency\s*=\s*1\s*$/) }
         it { is_expected.to contain_file(fragment_file).with_content(/^pipeline\s*=\s*#{t}-server\s*$/) }

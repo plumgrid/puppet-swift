@@ -1,7 +1,7 @@
 swift
 =======
 
-6.0.0 - 2015.1 - Kilo
+7.0.0 - 2015.2 - Liberty
 
 #### Table of Contents
 
@@ -31,11 +31,11 @@ Setup
 
 **What the swift module affects**
 
-* swift, the object storage service for Openstack.
+* [Swift](https://wiki.openstack.org/wiki/Swift), the object storage service for Openstack.
 
 ### Installing swift
 
-    example% puppet module install puppetlabs/swift
+    puppet module install openstack/swift
 
 ### Beginning with swift
 
@@ -126,6 +126,28 @@ This is the ip that the proxy service will bind to when it starts.
 ####`port`
 The port for which the proxy service will bind to when it starts.
 
+### Class swift::proxy::dlo
+
+Configures [DLO middleware](http://docs.openstack.org/developer/swift/middleware.html#module-swift.common.middleware.dlo) for swift proxy.
+
+```puppet
+class { '::swift::proxy::dlo':
+  rate_limit_after_segment    => '10',
+  rate_limit_segments_per_sec => '1',
+  max_get_time                => '86400'
+}
+```
+
+####`rate_limit_after_segment`
+Start rate-limiting DLO segment serving after the Nth segment of a segmented object.
+
+####`rate_limit_segments_per_sec`
+Once segment rate-limiting kicks in for an object, limit segments served to N per second.
+0 means no rate-limiting.
+
+####`max_get_time`
+Time limit on GET requests (seconds).
+
 ### Class: swift::storage
 
 Class that sets up all of the configuration and dependencies for swift storage server instances.
@@ -214,6 +236,15 @@ The byte size that dd uses when it creates the file system.
 ####`seek`
 The size of the file system that will be created.  Defaults to 25000.
 
+### Class: swift::objectexpirer
+Class that will set Swift object expirer, for scheduled deletion of objects.
+
+```puppet
+class { 'swift::objectexpirer': }
+```
+
+It is assumed that the object expirer service will usually be installed in a proxy node. On Red Hat-based distributions, if the class is included in a non-proxy node, the openstack-swift-proxy package will need to be installed.
+
 ### Verifying installation
 
 This modules ships with a simple Ruby script that validates whether or not your swift cluster is functional.
@@ -228,6 +259,61 @@ Implementation
 ### swift
 
 swift is a combination of Puppet manifest and ruby code to delivery configuration and extra functionality through types and providers.
+
+### Types
+
+#### swift_config
+
+The `swift_config` provider is a children of the ini_setting provider. It allows one to write an entry in the `/etc/swift/swift.conf` file.
+
+```puppet
+swift_config { 'DEFAULT/verbose' :
+  value => true,
+}
+```
+
+This will write `verbose=true` in the `[DEFAULT]` section.
+
+##### name
+
+Section/setting name to manage from `swift.conf`
+
+##### value
+
+The value of the setting to be defined.
+
+##### secret
+
+Whether to hide the value from Puppet logs. Defaults to `false`.
+
+##### ensure_absent_val
+
+If value is equal to ensure_absent_val then the resource will behave as if `ensure => absent` was specified. Defaults to `<SERVICE DEFAULT>`
+
+#### swift_account_config
+
+Same as `swift_config`, but path is `/etc/swift/account-server.conf`
+
+#### swift_bench_config
+
+Same as `swift_config`, but path is `/etc/swift/swift-bench.conf`
+
+#### swift_container_config
+
+Same as `swift_config`, but path is `/etc/swift/container-server.conf`
+
+#### swift_dispersion_config
+
+Same as `swift_config`, but path is `/etc/swift/dispersion.conf`
+
+#### swift_object_config
+
+Same as `swift_config`, but path is `/etc/swift/object-server.conf`
+
+#### swift_proxy_config
+
+Same as `swift_config`, but path is `/etc/swift/proxy-server.conf`
+
 
 Limitations
 ------------

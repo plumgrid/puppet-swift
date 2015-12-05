@@ -170,13 +170,12 @@ class swift::proxy(
   package { 'swift-proxy':
     ensure => $package_ensure,
     name   => $::swift::params::proxy_package_name,
-    tag    => 'openstack',
+    tag    => ['openstack', 'swift-package'],
   }
 
   concat { '/etc/swift/proxy-server.conf':
     owner   => 'swift',
     group   => 'swift',
-    mode    => '0660',
     require => Package['swift-proxy'],
   }
 
@@ -200,6 +199,8 @@ class swift::proxy(
     before  => Class[$required_classes],
   }
 
+  Concat['/etc/swift/proxy-server.conf'] -> Swift_proxy_config <||>
+
   if $manage_service {
     if $enabled {
       $service_ensure = 'running'
@@ -215,5 +216,6 @@ class swift::proxy(
     provider  => $::swift::params::service_provider,
     hasstatus => true,
     subscribe => Concat['/etc/swift/proxy-server.conf'],
+    tag       => 'swift-service',
   }
 }
